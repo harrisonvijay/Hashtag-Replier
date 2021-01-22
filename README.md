@@ -1,1 +1,5 @@
 # Hashtag-Replier
+
+This is a python program that can be run on your pc or an online console. It automatically replies to any tweet tagging your account (here @HReplier) and mentioning a particular keyword (here #helloworld).
+
+Note: You need to set up a Twitter developer account and generate CONSUMER_KEY, CONSUMER_SECRET, ACCESS_KEY, ACCESS_SECRET. 
