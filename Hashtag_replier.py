@@ -1,6 +1,7 @@
 import tweepy
 import time
 from decouple import config
+from keep_alive import keep_alive
 
 print("==========REPLIER-BOT==========")
 
@@ -48,6 +49,9 @@ def reply():
 			print('Found #helloworld!', flush=True)
 			print('Responding back...', flush=True)
 			api.update_status('@'+mention.user.screen_name+'#Helloworld back to you!', mention.id)
+
+# keeps a server running, even after replit tab is closed
+keep_alive()
 
 while True:
 	reply()
