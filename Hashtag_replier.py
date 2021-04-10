@@ -40,19 +40,22 @@ def store_lsi(filename,last_seen_id):
 def reply():
 	print("Retrieving Tweets...", flush=True)
 	last_seen_id=retrieve_lsi('lastseenid.txt')
-	mentions=api.mentions_timeline(last_seen_id, tweet_mode='extended')
-	for mention in reversed(mentions):
-		print(str(mention.id)+' - '+mention.full_text, flush=True)
-		last_seen_id=mention.id
-		store_lsi('lastseenid.txt',last_seen_id)
-		if '#helloworld' in mention.full_text.lower():
-			print('Found #helloworld!', flush=True)
-			print('Responding back...', flush=True)
-			api.update_status('@'+mention.user.screen_name+'#Helloworld back to you!', mention.id)
+	try:
+		mentions=api.mentions_timeline(last_seen_id, tweet_mode='extended')
+		for mention in reversed(mentions):
+			print(str(mention.id)+' - '+mention.full_text, flush=True)
+			last_seen_id=mention.id
+			store_lsi('lastseenid.txt',last_seen_id)
+			if '#helloworld' in mention.full_text.lower():
+				print('Found #helloworld!', flush=True)
+				print('Responding back...', flush=True)
+				api.update_status('@'+mention.user.screen_name+'#Helloworld back to you!', mention.id)
+	except tweepy.RateLimitError:
+		time.sleep(300)
 
 # keeps a server running, even after replit tab is closed
 keep_alive()
 
 while True:
 	reply()
-	time.sleep(10)
+	time.sleep(30)
