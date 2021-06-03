@@ -16,53 +16,38 @@ api = tweepy.API(auth)
 
 
 def get_last_seen_id():
-    last_id = None
-    for status in api.user_timeline():
-        last_id = status.id
-        break
-    return last_id
+    return api.mentions_timeline()[0].id
 
 
-def retrieve_lsi(filename):
-    try:
-        with open(filename, "r") as f:
-            last_seen_id = int(f.read().strip())
-    except FileNotFoundError:
-        created_file = open(filename, "w")
-        created_file.close()
-        last_seen_id = get_last_seen_id()
-        store_lsi(filename, last_seen_id)
-    return last_seen_id
-
-
-def store_lsi(filename, last_seen_id):
-    with open(filename, "w") as f:
-        f.write(str(last_seen_id))
-    return
-
-
-def reply():
+def reply(last_seen_id):
     print("Retrieving Tweets...", flush=True)
-    last_seen_id = retrieve_lsi("lastseenid.txt")
+    new_lsi = last_seen_id
     try:
-        mentions = api.mentions_timeline(last_seen_id, tweet_mode="extended")
-        for mention in reversed(mentions):
-            print(str(mention.id) + " - " + mention.full_text, flush=True)
-            last_seen_id = mention.id
-            store_lsi("lastseenid.txt", last_seen_id)
-            if "#hello" in mention.full_text.lower():
+        for mention in tweepy.Cursor(api.mentions_timeline,
+                                     since_id=last_seen_id,
+                                     tweet_mode="extended").items():
+            mention = mention._json
+            new_lsi = mention["id"]
+            if (new_lsi > last_seen_id) and ("#hello"
+                                             in mention["full_text"].lower()):
                 print("Found #hello!", flush=True)
                 print("Responding back...", flush=True)
                 api.update_status(
-                    "@" + mention.user.screen_name + " Hello there, " +
-                    mention.user.name + "!", mention.id)
+                    "@" + mention["user"]["screen_name"] + " Hello there, " +
+                    mention["user"]["name"] + "!",
+                    mention["id"],
+                )
     except tweepy.RateLimitError:
         time.sleep(300)
+    except tweepy.TweepError as e:
+        print(e.api_code)
+        print(e.reason)
+    return new_lsi
 
 
 # keeps a server running, even after replit tab is closed
 keep_alive()
-
+last_seen_id = get_last_seen_id()
 while True:
-    reply()
+    last_seen_id = max(last_seen_id, reply(last_seen_id))
     time.sleep(30)
